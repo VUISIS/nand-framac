@@ -1,0 +1,2 @@
+#!/bin/sh
+frama-c -cpp-extra-args '"-I/usr/include" "-Idriver" "-Iframework" "-Idevice" "-Itester"' -eva $*
