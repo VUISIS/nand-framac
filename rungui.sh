@@ -1,1 +1,1 @@
-./run-framac-gui -eva -wp-no-simpl framework/framework.c main/main.c device/device_emu.c tester/tester.c driver/alpha/alpha_0.c
+./run-framac-gui -eva -wp -wp-no-simpl -wp-no-filter-init -wp-prover alt-ergo,z3 simple_harness.c driver/alpha/alpha_0.c

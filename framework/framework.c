@@ -111,6 +111,9 @@ struct nand_device *init_framework(volatile unsigned long *ioregister,
  *
  */
 
+/*@
+ requires \valid_read(buffer + (0 .. size-1));
+ */
 int jt_write(unsigned char *buffer, unsigned int offset, unsigned int size) {
 	
 	unsigned int bytes_per_page = NUM_BYTES;
@@ -134,17 +137,28 @@ int jt_write(unsigned char *buffer, unsigned int offset, unsigned int size) {
 	driver.operation.jump_table.set_register(IOREG_ADDRESS, page_addr);
 	driver.operation.jump_table.set_register(IOREG_ADDRESS, byte_addr);
 
+  for (int i=0; i < NUM_BYTES; i++) {
+    temp_buff[i] = 0;
+  }
 	while (bytes_left) {
-		size_to_write = bytes_per_page;
+	 	size_to_write = bytes_per_page;
+    //@ assert size_to_write <= 256;
 		if (offset != 0) {
 			size_to_write = bytes_per_page - offset;
+      //@ assert size_to_write <= 256;
 			offset = 0;
 		}
 		if (bytes_left < bytes_per_page &&
 			bytes_left < size_to_write) {
 			size_to_write = bytes_left;
+      //@ assert size_to_write <= 256;
 		}
+    //@ assert size_to_write <= 256;
 
+    /*@
+     loop assigns i, temp_buff[0 .. size_to_write-1];
+     loop invariant 0 <= i <= size_to_write;
+     */
     for (int i=0; i < size_to_write; i++) {
       temp_buff[i] = buffer[i];
     }
@@ -262,11 +276,6 @@ int write_nand(unsigned char *buffer, unsigned int offset, unsigned int size)
 	return -1;
 }
 
-/*@
- requires \valid(buffer + (0 .. size-1));
- requires \separated(buffer + (0 .. size-1), &size);
- requires \separated(buffer + (0 .. size-1), &offset);
- */
 int jt_read(unsigned char *buffer, unsigned int offset, unsigned int size)
 {
 	unsigned int bytes_per_page = NUM_BYTES;

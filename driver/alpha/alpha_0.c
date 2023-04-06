@@ -56,8 +56,6 @@ int nand_wait(unsigned int interval_us)
 // Returns 0 on success
 /*@
  requires \valid(buffer + (0 .. length-1));
- requires \separated(buffer + (..), &length);
- requires \separated(buffer + (0 .. length-1), &length);
  requires \separated(buffer + (0 .. length-1), &driver_ioregister);
  */
 int nand_read(unsigned char *buffer, unsigned int length)
@@ -69,13 +67,17 @@ int nand_read(unsigned char *buffer, unsigned int length)
   /*@
    loop invariant 0 <= length <= \at(length, Pre);
    loop invariant buffer == \at(buffer, Pre) + \at(length, Pre) - length;
+   loop variant length;
    */
 	while (length--) {
     //@ assert \valid(\at(buffer, Pre) + (0 .. \at(length, Pre)-1));
     //@ assert \valid(buffer);
+    //@ ghost unsigned char *old_buffer = buffer;
 		*buffer++ = *(driver_ioregister + IOREG_DATA);
+    //@ assert buffer == old_buffer + 1;
 	}
 
+	// return length;    // length is not 0 here
 	return 0;
 }
 
@@ -86,7 +88,7 @@ int nand_read(unsigned char *buffer, unsigned int length)
   requires \valid(driver_ioregister+IOREG_DATA);
   requires \separated(buffer + (..), &driver_ioregister);
   requires \separated(buffer + (0 .. length-1), &driver_ioregister);
-  assigns *(driver_ioregister+IOREG_DATA);
+  requires \initialized(buffer + (0 .. length-1));
  */
 int nand_program(unsigned char *buffer, unsigned int length)
 {
@@ -96,15 +98,22 @@ int nand_program(unsigned char *buffer, unsigned int length)
 	}
 
   /*@
-    loop assigns length;
-    loop assigns *(driver_ioregister+IOREG_DATA);
+   loop invariant 0 <= length <= \at(length, Pre);
+   loop invariant buffer == \at(buffer, Pre) + \at(length, Pre) - length;
+   loop variant length;
    */
 	while (length--) {
+    //@ assert \valid_read(\at(buffer, Pre) + (0 .. \at(length, Pre)-1));
+    //@ assert \valid_read(buffer);
+    //@ ghost unsigned char *old_buffer = buffer;
+    //@ assert \initialized {Pre}(buffer);
 		*((unsigned char*)driver_ioregister + IOREG_DATA) = 
 			*buffer++;
+    //@ assert buffer == old_buffer + 1;
 	}
 
-	return length;
+	// return length;    // length is not 0 here
+	return 0;
 }
 
 struct nand_driver get_driver()

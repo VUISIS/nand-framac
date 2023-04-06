@@ -1,2 +1,2 @@
 #!/bin/sh
-frama-c-gui -cpp-extra-args '"-I/usr/include" "-Idriver" "-Iframework" "-Idevice" "-Itester"' $*
+GTK_THEME=Adwaita:light frama-c-gui -cpp-extra-args '"-I/usr/include" "-Idriver" "-Iframework" "-Idevice" "-Itester"' $*
