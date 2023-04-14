@@ -55,8 +55,17 @@ int nand_wait(unsigned int interval_us)
 // Reads the data in to buffer in the nand device at offset with length of size
 // Returns 0 on success
 /*@
- requires \valid(buffer + (0 .. length-1));
- requires \separated(buffer + (0 .. length-1), &driver_ioregister);
+  requires \valid(buffer + (0 .. length-1));
+  requires \separated(buffer + (0 .. length-1), &driver_ioregister);
+  requires \separated(buffer + (0 .. length-1), &buffer);
+  behavior ok:
+    assumes length <= NUM_BYTES;
+    assigns buffer[0 .. length-1];
+    ensures \result == 0;
+  behavior error:
+    assumes length > NUM_BYTES;
+    assigns \nothing;
+    ensures \result == -1;
  */
 int nand_read(unsigned char *buffer, unsigned int length)
 {
@@ -67,6 +76,8 @@ int nand_read(unsigned char *buffer, unsigned int length)
   /*@
    loop invariant 0 <= length <= \at(length, Pre);
    loop invariant buffer == \at(buffer, Pre) + \at(length, Pre) - length;
+   loop invariant \at(buffer,Pre)-buffer <= 0;
+   loop assigns length, buffer, *(\at(buffer, Pre) + (0 .. \at(length, Pre)-length-1));
    loop variant length;
    */
 	while (length--) {
@@ -77,7 +88,7 @@ int nand_read(unsigned char *buffer, unsigned int length)
     //@ assert buffer == old_buffer + 1;
 	}
 
-	// return length;    // length is not 0 here
+	//return length;    // length is not 0 here
 	return 0;
 }
 
@@ -89,6 +100,14 @@ int nand_read(unsigned char *buffer, unsigned int length)
   requires \separated(buffer + (..), &driver_ioregister);
   requires \separated(buffer + (0 .. length-1), &driver_ioregister);
   requires \initialized(buffer + (0 .. length-1));
+  behavior ok:
+    assumes length <= NUM_BYTES;
+    assigns *(driver_ioregister+IOREG_DATA);
+    ensures \result == 0;
+  behavior error:
+    assumes length > NUM_BYTES;
+    assigns \nothing;
+    ensures \result == -1;
  */
 int nand_program(unsigned char *buffer, unsigned int length)
 {
@@ -100,6 +119,7 @@ int nand_program(unsigned char *buffer, unsigned int length)
   /*@
    loop invariant 0 <= length <= \at(length, Pre);
    loop invariant buffer == \at(buffer, Pre) + \at(length, Pre) - length;
+   loop assigns length, buffer, *(driver_ioregister+IOREG_DATA);
    loop variant length;
    */
 	while (length--) {
