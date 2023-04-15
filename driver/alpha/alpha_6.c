@@ -75,10 +75,16 @@ int nand_read(unsigned char *buffer, unsigned int length)
 		return -1;
 	}
 
+// The forall loop invariant below cannot be proven, and in fact is false.
+// It can be shown to be false by changing the implication to:
+// initialized(buffer+\at(length,Pre)-i-1);
+// This implication can be proven by Frama-C, which means that the loop is
+// actually writing to the buffer in reverse order.
+
   /*@
    loop invariant 0 <= length <= \at(length, Pre);
-   loop invariant \forall unsigned int i; 0 <= i < \at(length,Pre)-length ==> \initialized(buffer+i);
    loop invariant buffer <= buffer+length <= buffer+\at(length, Pre);
+   loop invariant \forall unsigned int i; 0 <= i < \at(length,Pre)-length ==> \initialized(buffer+i);
    loop assigns length, *(buffer + (0 .. \at(length, Pre)-1));
    loop variant length;
    */
