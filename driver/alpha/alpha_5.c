@@ -11,9 +11,16 @@
 
 #define NAND_POLL_INTERVAL_US 10  /* polling interval in microseconds */
 
-volatile unsigned long* driver_ioregister;
+volatile unsigned char* driver_ioregister;
 
 // Resets the nand device to its inital state
+/*@
+  requires 0 <= offset && offset <= 4;
+  requires \valid((unsigned char*) driver_ioregister + offset);
+  assigns *((unsigned char*)driver_ioregister+offset);
+  behavior wp_typed:
+    requires \separated((unsigned char*) driver_ioregister+offset, &driver_ioregister);
+ */
 void nand_set_register(unsigned char offset, unsigned char value)
 {
 	*((unsigned char*)driver_ioregister + offset) = value;
@@ -47,6 +54,19 @@ int nand_wait(unsigned int interval_us)
 // Reads the data in to buffer in the nand device at offset with length of size
 // Returns 0 on success
 // Intended BUG: Read will not stop if not a multiple of 8
+/*@
+  requires \valid(buffer + (0 .. length-1));
+  requires \separated(buffer + (0 .. length-1), &driver_ioregister);
+  requires \separated(buffer + (0 .. length-1), &buffer);
+  behavior ok:
+    assumes length <= NUM_BYTES;
+    assigns buffer[0 .. length-1];
+    ensures \result == 0;
+  behavior error:
+    assumes length > NUM_BYTES;
+    assigns \nothing;
+    ensures \result == -1;
+ */
 int nand_read(unsigned char *buffer, unsigned int length)
 {
 	unsigned int page_size = NUM_BYTES;
@@ -56,8 +76,23 @@ int nand_read(unsigned char *buffer, unsigned int length)
 		return -1;
 	}
 
+  /*@
+   loop invariant 0 <= i <= length;
+   loop assigns i, buffer[0 .. length-1];
+   loop variant length-i;
+  */
 	while (i != length) {
+    /*@
+     loop invariant 0 <= j <= 8;
+     loop invariant i + j <= length;
+     loop invariant \forall int k; 0 <= k < j ==> \initialized(buffer + i+k);
+     loop invariant \forall int k; 0 <= k < length ==> \initialized(buffer + k);
+     loop assigns j, buffer[i .. i+7];
+     loop variant 8 - j;
+     */
 		for (int j = 0; j < 8; j++) {
+      //@ assert \valid(buffer + (0 .. length-1));
+      //@ assert \valid(buffer);
 			*(buffer+i+j) = *((unsigned char*)driver_ioregister + 
 				IOREG_DATA);
 		}
@@ -69,6 +104,21 @@ int nand_read(unsigned char *buffer, unsigned int length)
 
 // Writes the data in buffer to the nand device at offset with length of size
 // Returns 0 on success
+/*@
+  requires \valid_read(buffer + (0 .. length - 1));
+  requires \valid(driver_ioregister+IOREG_DATA);
+  requires \separated(buffer + (..), &driver_ioregister);
+  requires \separated(buffer + (0 .. length-1), &driver_ioregister);
+  requires \initialized(buffer + (0 .. length-1));
+  behavior ok:
+    assumes length <= NUM_BYTES;
+    assigns *(driver_ioregister+IOREG_DATA);
+    ensures \result == 0;
+  behavior error:
+    assumes length > NUM_BYTES;
+    assigns \nothing;
+    ensures \result == -1;
+ */
 int nand_program(unsigned char *buffer, unsigned int length)
 {
 	unsigned int page_size = NUM_BYTES;
@@ -76,12 +126,24 @@ int nand_program(unsigned char *buffer, unsigned int length)
 		return -1;
 	}
 
+  /*@
+   loop invariant 0 <= length <= \at(length, Pre);
+   loop invariant buffer == \at(buffer, Pre) + \at(length, Pre) - length;
+   loop assigns length, buffer, *(driver_ioregister+IOREG_DATA);
+   loop variant length;
+   */
 	while (length--) {
+    //@ assert \valid_read(\at(buffer, Pre) + (0 .. \at(length, Pre)-1));
+    //@ assert \valid_read(buffer);
+    //@ ghost unsigned char *old_buffer = buffer;
+    //@ assert \initialized {Pre}(buffer);
 		*((unsigned char*)driver_ioregister + IOREG_DATA) = 
 			*buffer++;
+    //@ assert buffer == old_buffer + 1;
 	}
 
-	return length;
+	// return length;  // Length is not zero here
+  return 0;
 }
 
 struct nand_driver get_driver()
@@ -101,7 +163,7 @@ struct nand_driver get_driver()
 }
 
 // Initalizes the private device information
-struct nand_device *init_nand_driver(volatile unsigned long *ioregister,
+struct nand_device *init_nand_driver(volatile unsigned char *ioregister,
 	struct nand_device *old_dib)
 {
 	printf("ALPHA 5 DRIVER\n");

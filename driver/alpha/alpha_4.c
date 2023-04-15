@@ -75,14 +75,6 @@ int nand_read(unsigned char *buffer, unsigned int length)
 		return -1;
 	}
 
-// The following loop invariant is disproved, showing that the
-// buffer may not be initialized up through length-1. This would
-// happen any time length is not a multiple of 8. For example,
-// if length == 30, the i index is in the range 0 <= i < 3 since
-// 30/8 == 3. In the last run of the loop, i=2, and j is in the range
-// 0 <= j < 8, so it runs from 2*8 + 0 (16) to 2*8 + 7 (23), so
-// values 24..29 do not get initialized.
-//   loop invariant \forall int k; 0 <= k < length ==> \initialized(buffer + k);
   /*@
    loop invariant 0 <= i <= length / 8;
    loop invariant i * 8 <= length;
@@ -94,6 +86,7 @@ int nand_read(unsigned char *buffer, unsigned int length)
      loop invariant 0 <= j <= 8;
      loop invariant i * 8 + j <= length;
      loop invariant \forall int k; 0 <= k < j ==> \initialized(buffer + i*8+k);
+     loop invariant \forall int k; 0 <= k < length ==> \initialized(buffer + k);
      loop assigns j, buffer[i * 8 .. i*8+7];
      loop variant 8 - j;
      */
