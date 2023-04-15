@@ -57,7 +57,6 @@ int nand_wait(unsigned int interval_us)
 /*@
   requires \valid(buffer + (0 .. length-1));
   requires \separated(buffer + (0 .. length-1), &driver_ioregister);
-  requires \separated(buffer + (0 .. length-1), &buffer);
   behavior ok:
     assumes length <= NUM_BYTES;
     assigns buffer[0 .. length-1];
