@@ -77,6 +77,7 @@ int nand_read(unsigned char *buffer, unsigned int length)
    loop invariant 0 <= length <= \at(length, Pre);
    loop invariant buffer == \at(buffer, Pre) + \at(length, Pre) - length;
    loop invariant \at(buffer,Pre)-buffer <= 0;
+   loop invariant \forall unsigned int i; 0 <= i < \at(length,Pre)-length ==> \initialized(\at(buffer, Pre)+i);
    loop assigns length, buffer, *(\at(buffer, Pre) + (0 .. \at(length, Pre)-length-1));
    loop variant length;
    */
