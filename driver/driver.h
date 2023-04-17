@@ -18,7 +18,7 @@
 
 // MAW - Changed type of ioregister to unsigned char* because Frama-C considers the
 // cast to be incompatible, and it is always used as a unsigned char* anyway
-struct nand_device *init_nand_driver(volatile unsigned char *ioregister, struct nand_device *old_dib);
+struct nand_device *init_nand_driver(volatile unsigned long *ioregister, struct nand_device *old_dib);
 struct nand_driver get_driver();
 
 

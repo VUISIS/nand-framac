@@ -157,10 +157,10 @@ struct nand_driver get_driver()
 }
 
 // Initalizes the private device information
-struct nand_device *init_nand_driver(volatile unsigned char *ioregister,
+struct nand_device *init_nand_driver(volatile unsigned long *ioregister,
 	struct nand_device *old_dib)
 {
 	printf("ALPHA 6 DRIVER\n");
-	driver_ioregister = ioregister;
+	driver_ioregister = (unsigned char *) ioregister;
 	return old_dib;  /* This driver does not use DIB. */
 }

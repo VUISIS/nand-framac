@@ -11,7 +11,7 @@
 
 #define NAND_POLL_INTERVAL_US 10  /* polling interval in microseconds */
 
-volatile unsigned long* driver_ioregister;
+volatile unsigned char* driver_ioregister;
 
 // Resets the nand device to its inital state
 void nand_set_register(unsigned char offset, unsigned char value)
@@ -97,6 +97,6 @@ struct nand_device *init_nand_driver(volatile unsigned long *ioregister,
 	struct nand_device *old_dib)
 {
 	printf("ALPHA 2 DRIVER\n");
-	driver_ioregister = ioregister;
+	driver_ioregister = (unsigned char *) ioregister;
 	return old_dib;  /* This driver does not use DIB. */
 }
