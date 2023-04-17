@@ -15,7 +15,7 @@ extern int exec_op(struct nand_operation *);
 extern struct nand_device *init_nand_driver(volatile unsigned char *ioregister,
                                      struct nand_device *old_dib);
 
-volatile unsigned char ioregister[4] = { 0, 0, 0, 0};
+volatile unsigned long ioregister = 0;
 
 unsigned char read_buff[NUM_BYTES];
 unsigned char write_buff[NUM_BYTES];
@@ -26,7 +26,7 @@ int main()
   const unsigned char addrtmp[1] = { 'a'};
   unsigned char addr_buff[3] = { 0, 0, 0};
 
-  init_nand_driver(ioregister, NULL);
+  init_nand_driver(&ioregister, NULL);
 
   /*@
    loop invariant 0 <= i <= NUM_BYTES;
