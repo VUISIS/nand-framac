@@ -23,7 +23,7 @@ int main()
   init_nand_driver(ioregister, NULL);
   nand_set_register(0, 0);
   nand_wait(100);
-  nand_read(temp_buff, NUM_BYTES);
+  nand_read(temp_buff, NUM_BYTES-4);
   /*@
     loop invariant 0 <= i <= sizeof(temp_buff);
     loop assigns i, temp_buff[0 .. sizeof(temp_buff)-1];
@@ -34,5 +34,5 @@ int main()
     temp_buff[i] = 0;
   }
   //@ assert \initialized {Here} ((unsigned char *)temp_buff + (0 .. sizeof(temp_buff)-1));
-  nand_program(temp_buff, NUM_BYTES);
+  nand_program(temp_buff, NUM_BYTES-4);
 }

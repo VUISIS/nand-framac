@@ -75,21 +75,23 @@ int nand_read(unsigned char *buffer, unsigned int length)
 		return -1;
 	}
 
+  //@ ghost unsigned int num_read = 0;
   /*@
    loop invariant 0 <= i <= length;
-   loop assigns i, buffer[0 .. length-1];
+   loop invariant num_read == i;
+   loop assigns i, num_read, buffer[0 .. length-1];
    loop variant length-i;
   */
 	while (i != length) {
     /*@
      loop invariant 0 <= j <= 8;
      loop invariant i + j <= length;
-     loop invariant \forall int k; 0 <= k < j ==> \initialized(buffer + i+k);
-     loop invariant \forall int k; 0 <= k < length ==> \initialized(buffer + k);
-     loop assigns j, buffer[i .. i+7];
+     loop invariant num_read == i + j;
+     loop assigns j, num_read, buffer[i .. i+7];
      loop variant 8 - j;
      */
 		for (int j = 0; j < 8; j++) {
+      //@ ghost num_read++;
       //@ assert \valid(buffer + (0 .. length-1));
       //@ assert \valid(buffer);
 			*(buffer+i+j) = *((unsigned char*)driver_ioregister + 
@@ -97,6 +99,7 @@ int nand_read(unsigned char *buffer, unsigned int length)
 		}
 		i += 8;
 	}
+  //@ assert num_read == length;
 
 	return 0;
 }

@@ -74,22 +74,24 @@ int nand_read(unsigned char *buffer, unsigned int length)
 		return -1;
 	}
 
+  //@ ghost unsigned int num_read = 0;
   /*@
    loop invariant 0 <= i <= length / 8;
+   loop invariant num_read == i*8;
    loop invariant i * 8 <= length;
-   loop assigns i, buffer[0 .. length-1];
+   loop assigns i, num_read, buffer[0 .. length-1];
    loop variant (length/8) - i;
   */
 	for (int i = 0; i < length / 8; i++)	{
     /*@
      loop invariant 0 <= j <= 8;
+     loop invariant num_read == i * 8 + j;
      loop invariant i * 8 + j <= length;
-     loop invariant \forall int k; 0 <= k < j ==> \initialized(buffer + i*8+k);
-     loop invariant \forall int k; 0 <= k < length ==> \initialized(buffer + k);
-     loop assigns j, buffer[i * 8 .. i*8+7];
+     loop assigns j, num_read, buffer[i * 8 .. i*8+7];
      loop variant 8 - j;
      */
 		for (int j = 0; j < 8; j++) {
+      //@ ghost num_read++;
       //@ assert \valid(buffer + (0 .. length-1));
       //@ assert \valid(buffer);
 			*(buffer+(i*8)+j) =
@@ -98,6 +100,7 @@ int nand_read(unsigned char *buffer, unsigned int length)
 		}
 
 	}
+  //@ assert num_read == length;
 
 	return 0;
 }
